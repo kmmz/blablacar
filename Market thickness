@@ -1,0 +1,65 @@
+###PYTHON
+
+#prepare data
+
+import random
+
+rider = list()
+for i in range(0,1000):
+    n = random.randrange(1,25)
+    rider.append(n)
+
+driver = list()
+for i in range(0,1000):
+    n = random.randrange(1,25)
+    driver.append(n)
+    
+
+#expand the test scope; create a dataframe for storing results
+
+import pandas as pd
+import numpy as np
+
+sim = pd.DataFrame(columns = ['Number of Riders','Number of Drivers','Order matched','Rider SL','Driver SL'],
+                   index = [np.arange(1, 26, 1).tolist()])
+sim['Number of Riders'] = np.arange(20, 501, 20).tolist()
+sim['Number of Drivers'] = np.arange(20, 501, 20).tolist()
+
+#prepare the driver's list for each row - slots chosen by #drivers 
+
+def driver_list(m):
+    slots = driver[0:m]
+    return slots
+
+#simulate
+
+def match(r,d):
+    order = 0
+    for i in range(r):
+        rider_temp = rider[0:i+1]
+        driver_temp = driver_list(d)
+        if rider[i] in driver_temp:
+            if rider_temp.count(rider[i]) <= driver_temp.count(rider[i]):
+                order +=1
+    return order
+
+def repeat_match(rr,dd):
+    order_temp = []
+    for i in range(1000):
+        random.shuffle(rider)
+        random.shuffle(driver)
+        order_temp.append(match(rr,dd))
+    return order_temp                                  
+
+def order_average(rrr,ddd):
+    order_avg = sum(repeat_match(rrr,ddd))/1000
+    return order_avg
+    
+#fill results into the dataframe    
+
+for index in sim.index:
+    sim.loc[index,'Order matched'] = order_average(sim.loc[index,'Number of Riders'],sim.loc[index,'Number of Drivers'])
+    sim.loc[index,'Rider SL'] = "{:.0%}".format(sim.loc[index,'Order matched']/sim.loc[index,'Number of Riders'])
+    sim.loc[index,'Driver SL'] = "{:.0%}".format(sim.loc[index,'Order matched']/sim.loc[index,'Number of Drivers'])
+    
+#visualzie results
